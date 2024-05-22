@@ -7,23 +7,28 @@ import time
 logging.basicConfig(filename='appointment_checker.log', level=logging.INFO, format='%(asctime)s - %(levelname)s: %(message)s')
 
 # URL of the appointment page
-url = 'https://google.com/'
+url = 'https://service2.diplo.de/rktermin/extern/choose_categoryList.do?locationCode=isla&realmId=108'
 
 # Keyword to look for
-keyword = 'google'
+keyword = 'study visa'
 
 # Refresh interval in seconds
 refresh_interval = 1
 
+# Headers to mimic a real browser
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
+}
+
 def check_appointments():
     try:
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, headers=headers, timeout=10)
         response.raise_for_status()
         
         soup = BeautifulSoup(response.text, 'html.parser')
         
         # Check if the keyword is in the page
-        if keyword in soup.get_text():
+        if keyword.lower in soup.get_text().lower:
             logging.info('Appointment is available!')
             print('Appointment is available!')
             # Add code here to trigger a notification (e.g., send an email or SMS)
