@@ -1,5 +1,7 @@
-import requests
-from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
 import logging
 import time
 
@@ -15,20 +17,29 @@ keyword = 'study visa'
 # Refresh interval in seconds
 refresh_interval = 1
 
-# Headers to mimic a real browser
-headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
-}
+# Path to your WebDriver executable
+webdriver_path = r'C:\Users\Omair Ahmad\Downloads\chromedriver-win64\chromedriver.exe'  # Update this path
+
+# Configure WebDriver options
+options = Options()
+options.add_argument('--headless')  # Run headless Chrome
+options.add_argument('--disable-gpu')  # Disable GPU acceleration
+options.add_argument('--no-sandbox')  # Bypass OS security model
+options.add_argument('--disable-dev-shm-usage')  # Overcome limited resource problems
+
+# Initialize the WebDriver
+service = Service(webdriver_path)
+driver = webdriver.Chrome(service=service, options=options)
 
 def check_appointments():
     try:
-        response = requests.get(url, headers=headers, timeout=10)
-        response.raise_for_status()
+        driver.get(url)
+        time.sleep(5)  # Wait for the page to load completely
         
-        soup = BeautifulSoup(response.text, 'html.parser')
+        page_text = driver.find_element(By.TAG_NAME, 'body').text
         
         # Check if the keyword is in the page
-        if keyword.lower in soup.get_text().lower:
+        if keyword.lower() in page_text.lower():
             logging.info('Appointment is available!')
             print('Appointment is available!')
             # Add code here to trigger a notification (e.g., send an email or SMS)
@@ -36,10 +47,14 @@ def check_appointments():
             logging.info('No appointments available.')
             print('No appointments available.')
     
-    except requests.exceptions.RequestException as e:
+    except Exception as e:
         logging.error(f'Error fetching the page: {e}')
+        print(f'Error fetching the page: {e}')
 
 # Loop to check the page at regular intervals
-while True:
-    check_appointments()
-    time.sleep(refresh_interval)
+try:
+    while True:
+        check_appointments()
+        time.sleep(refresh_interval)
+finally:
+    driver.quit()
